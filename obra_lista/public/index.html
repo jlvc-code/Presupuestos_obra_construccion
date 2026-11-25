@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ObraLista</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+
+<!-- ============ PANTALLA 1: INICIO ============ -->
+<section id="inicio" class="pantalla">
+  <h1>ObraLista</h1>
+
+  <input id="buscar" type="search" placeholder="Buscar por cliente, obra o fecha">
+  <a id="btn-nuevo" class="b p" href="#nuevo">+ Nuevo presupuesto</a>
+
+  <div id="lista"></div>
+  <p id="vacio" class="mut" hidden>Aún no hay presupuestos. Crea el primero.</p>
+
+  <a id="btn-respaldo" class="b" href="#respaldo">Respaldo de datos</a>
+</section>
+
+
+<!-- ============ PANTALLA 2: NUEVO PRESUPUESTO ============ -->
+<section id="nuevo" class="pantalla">
+  <h1 id="form-titulo">Nuevo presupuesto</h1>
+
+  <form id="form-presupuesto">
+    <label for="cliente">Cliente</label>
+    <input id="cliente" list="lista-clientes">
+    <datalist id="lista-clientes"></datalist>
+
+    <label for="telefono">Teléfono</label>
+    <input id="telefono" type="tel">
+
+    <label for="obra">Obra</label>
+    <input id="obra">
+
+    <label for="ubicacion">Ubicación</label>
+    <input id="ubicacion">
+
+    <label for="inicio-fecha">Fecha de inicio</label>
+    <input id="inicio-fecha" type="date">
+
+    <label for="entrega-fecha">Fecha de entrega</label>
+    <input id="entrega-fecha" type="date">
+
+    <p id="msg-form" class="bad"></p>
+
+    <button id="btn-guardar" class="b p" type="button">Guardar</button>
+    <a id="btn-cancelar-presupuesto" class="b" href="#inicio">Cancelar</a>
+  </form>
+</section>
+
+
+<!-- ============ PANTALLA 3: DETALLE DE UN PRESUPUESTO ============ -->
+<section id="detalle" class="pantalla">
+  <a class="b" href="#inicio">← Volver</a>
+
+  <h1 id="det-obra"></h1>
+  <p id="det-info" class="mut"></p>
+
+  <!-- Resumen de plata -->
+  <div class="card">
+    <div class="row"><span>Total</span><b id="det-total"></b></div>
+    <div class="row"><span>Cobrado</span><span id="det-cobrado"></span></div>
+    <div class="row"><span>Saldo por cobrar</span><b id="det-saldo"></b></div>
+    <div class="row"><span>Pagado a trabajadores</span><span id="det-pagado"></span></div>
+    <div class="row"><span id="det-queda-etiqueta">Te queda del cobro</span><b id="det-queda"></b></div>
+  </div>
+  <p id="det-aviso" class="aviso" hidden></p>
+
+  <!-- Botones para cambiar de pestaña -->
+  <div class="tabs">
+    <button class="b p" type="button" data-tab="rubros">Rubros</button>
+    <button class="b" type="button" data-tab="materiales">Materiales</button>
+    <button class="b" type="button" data-tab="pagos">Pagos</button>
+  </div>
+
+  <!-- Pestaña RUBROS -->
+  <div id="panel-rubros" class="panel">
+    <div id="lista-rubros"></div>
+    <div class="card">
+      <input id="rubro-nombre" placeholder="Rubro (columnas, losa…)">
+      <input id="rubro-cantidad" type="number" inputmode="decimal" placeholder="Cantidad">
+      <input id="rubro-valor" type="number" inputmode="decimal" placeholder="Valor unitario">
+      <button id="btn-agregar-rubro" class="b p" type="button">Agregar</button>
+      <button id="btn-cancelar-rubro" class="b" type="button" hidden>Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Pestaña MATERIALES (escondida con "hidden") -->
+  <div id="panel-materiales" class="panel" hidden>
+    <div id="lista-materiales"></div>
+    <div class="card">
+      <input id="material-nombre" placeholder="Material (cemento, bloque…)">
+      <input id="material-cantidad" type="number" inputmode="decimal" placeholder="Cantidad">
+      <input id="material-unidad" placeholder="Unidad (sacos, viajes…)">
+      <button id="btn-agregar-material" class="b p" type="button">Agregar</button>
+      <button id="btn-cancelar-material" class="b" type="button" hidden>Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Pestaña PAGOS (escondida con "hidden") -->
+  <div id="panel-pagos" class="panel" hidden>
+    <div class="cols">
+      <div>
+        <h2 class="col-titulo">Cobros al cliente</h2>
+        <div id="lista-cobros"></div>
+        <div class="row col-total"><span>Total</span><b id="total-cobros"></b></div>
+      </div>
+      <div>
+        <h2 class="col-titulo">Pagos a trabajadores</h2>
+        <div id="lista-trabajadores"></div>
+        <div class="row col-total"><span>Total</span><b id="total-trabajadores"></b></div>
+      </div>
+    </div>
+    <div class="card">
+      <input id="pago-fecha" type="date">
+      <input id="pago-monto" type="number" inputmode="decimal" placeholder="Monto">
+      <select id="pago-tipo">
+        <option value="cobro">Cobro del cliente</option>
+        <option value="trabajador">Pago a trabajador</option>
+      </select>
+      <button id="btn-agregar-pago" class="b p" type="button">Agregar</button>
+      <button id="btn-cancelar-pago" class="b" type="button" hidden>Cancelar</button>
+    </div>
+  </div>
+
+  <hr>
+  <a id="btn-whatsapp" class="b p" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+  <a id="btn-editar" class="b" href="#nuevo">Editar datos</a>
+  <button id="btn-duplicar" class="b" type="button">Duplicar</button>
+  <button id="btn-eliminar" class="b bad" type="button">Eliminar</button>
+</section>
+
+
+<!-- ============ PANTALLA 4: RESPALDO ============ -->
+<section id="respaldo" class="pantalla">
+  <a class="b" href="#inicio">← Volver</a>
+  <h1>Respaldo</h1>
+  <p class="mut">Copia este texto y guárdalo (por ejemplo, enviándotelo por WhatsApp). Para restaurar, pégalo aquí y toca Restaurar.</p>
+
+  <textarea id="respaldo-texto" rows="8"></textarea>
+  <button id="btn-copiar" class="b" type="button">Copiar respaldo</button>
+  <button id="btn-restaurar" class="b p" type="button">Restaurar desde el texto</button>
+  <p id="msg-respaldo" class="mut"></p>
+</section>
+
+</main>
+
+<!-- Aviso flotante para confirmar antes de borrar -->
+<dialog id="confirmar">
+  <p id="confirmar-texto"></p>
+  <button id="confirmar-no" class="b" type="button">Cancelar</button>
+  <button id="confirmar-si" class="b p" type="button">Sí, borrar</button>
+</dialog>
+
+<script src="jscript.js"></script>
+</body>
+</html>
