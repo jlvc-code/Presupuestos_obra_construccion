@@ -9,6 +9,9 @@
 <body>
 <main>
 
+<!-- Aviso que solo aparece si el servidor falla -->
+<p id="aviso-servidor" class="aviso aviso-rojo" hidden></p>
+
 <!-- ============ PANTALLA 1: INICIO ============ -->
 <section id="inicio" class="pantalla">
   <h1>ObraLista</h1>
@@ -130,7 +133,7 @@
   </div>
 
   <hr>
-  <a id="btn-whatsapp" class="b p" href="#" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+  <button id="btn-whatsapp" class="b p" type="button">Enviar por WhatsApp</button>
   <a id="btn-editar" class="b" href="#nuevo">Editar datos</a>
   <button id="btn-duplicar" class="b" type="button">Duplicar</button>
   <button id="btn-eliminar" class="b bad" type="button">Eliminar</button>
@@ -156,6 +159,18 @@
   <p id="confirmar-texto"></p>
   <button id="confirmar-no" class="b" type="button">Cancelar</button>
   <button id="confirmar-si" class="b p" type="button">Sí, borrar</button>
+</dialog>
+
+<!-- Ventana para elegir qué enviar por WhatsApp -->
+<dialog id="enviar">
+  <p><b>¿Qué quieres enviar por WhatsApp?</b></p>
+  <div class="opciones">
+    <a id="enviar-presupuesto" class="b" href="#" target="_blank" rel="noopener">Enviar presupuesto</a>
+    <a id="enviar-materiales" class="b" href="#" target="_blank" rel="noopener">Enviar lista de materiales</a>
+    <a id="enviar-pagos" class="b" href="#" target="_blank" rel="noopener">Enviar montos de pagos</a>
+  </div>
+  <p class="mut"><small>Los pagos a trabajadores nunca se envían al cliente.</small></p>
+  <button id="enviar-cancelar" class="b" type="button">Cancelar</button>
 </dialog>
 
 <script src="jscript.js"></script>

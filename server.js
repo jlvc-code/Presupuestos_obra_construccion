@@ -1,8 +1,10 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 
+
 app.use(express.json({ limit: '5mb' }));      // para entender los datos que manda la página
-app.use(express.static('obra_lista'));        // entrega tus 3 archivos
+app.use(express.static(path.join(__dirname, 'obra_lista', 'public')));        // entrega tus 3 archivos
 
 // Por ahora los datos viven en la memoria del servidor (después irán a una base de datos)
 let datos = { proyectos: [], rubros: [], materiales: [], pagos: [] };

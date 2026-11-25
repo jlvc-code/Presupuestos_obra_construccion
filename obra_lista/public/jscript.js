@@ -143,7 +143,6 @@ function dibujarDetalle() {
   document.querySelector('#det-queda').textContent = dinero(Math.abs(queda));
   document.querySelector('#det-queda').classList.toggle('bad', queda < 0);
   mostrarAviso(total, cobrado, pagado);
-  document.querySelector('#btn-whatsapp').href = urlWhatsApp(p, total, cobrado);   // NUEVO
   dibujarRubros();                             // CORREGIDO: faltaba dibujar los rubros
   dibujarMateriales();                         // NUEVO
   dibujarPagos();                              // NUEVO
@@ -425,22 +424,71 @@ document.querySelector('#btn-eliminar').addEventListener('click', () => {
   }, 'Sí, eliminar');
 });
 
-// ===== WHATSAPP =====
-// Ojo: el mensaje es para el CLIENTE, por eso NO incluye lo que le pagaste a tus trabajadores.
-function urlWhatsApp(p, total, cobrado) {
-  const lineas = rubros.filter(r => r.p === p.id).map(r => `- ${r.nombre}: ${dinero(r.cantidad * r.valor)}`);
-  const texto = [
-    `Presupuesto: ${p.obra}`,
-    `Cliente: ${p.cliente}`,
-    ...lineas,
-    `Total: ${dinero(total)}`,
-    `Cobrado: ${dinero(cobrado)}`,
-    `Saldo: ${dinero(total - cobrado)}`
-  ].join('\n');
+// ===== WHATSAPP: tres envíos separados =====
+// Regla: el presupuesto, la lista de materiales y los cobros NUNCA van mezclados.
+// Y lo que le pagaste a tus trabajadores no se envía jamás: ni siquiera existe aquí.
+function enlaceWhatsApp(p, lineas) {
   let numero = (p.telefono || '').replace(/\D/g, '');            // deja solo los números
   if (numero.startsWith('0')) numero = '593' + numero.slice(1);   // 0990000000 -> 593990000000 (Ecuador)
-  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(lineas.join('\n'))}`;
 }
+
+function ponerEnlace(id, url) {                  // si no hay nada que enviar, el botón queda apagado
+  const a = document.querySelector(id);
+  if (url) {
+    a.href = url;
+    a.removeAttribute('aria-disabled');
+  } else {
+    a.href = '#';
+    a.setAttribute('aria-disabled', 'true');
+  }
+}
+
+document.querySelector('#btn-whatsapp').addEventListener('click', () => {
+  const p = proyectos.find(x => x.id === actualId);
+  const total = totalDe(p.id);
+  const cobrado = cobradoDe(p.id);
+  const saldo = total - cobrado;
+  const cliente = `Cliente: ${p.cliente}`;
+
+  // 1) SOLO el presupuesto: rubros y total. Nada de cobros.
+  const rub = rubros.filter(r => r.p === p.id);
+  ponerEnlace('#enviar-presupuesto', rub.length ? enlaceWhatsApp(p, [
+    `Presupuesto: ${p.obra}`,
+    cliente,
+    ...rub.map(r => `- ${r.nombre}: ${dinero(r.cantidad * r.valor)}`),
+    `Total: ${dinero(total)}`
+  ]) : null);
+
+  // 2) SOLO la lista de materiales.
+  const mats = materiales.filter(m => m.p === p.id);
+  ponerEnlace('#enviar-materiales', mats.length ? enlaceWhatsApp(p, [
+    `Lista de materiales: ${p.obra}`,
+    cliente,
+    ...mats.map(m => `- ${m.nombre}: ${m.cantidad} ${m.unidad}`.trim())
+  ]) : null);
+
+  // 3) SOLO los cobros entre el cliente y el contratista (nunca los pagos a trabajadores).
+  const cobros = pagos.filter(x => x.p === p.id && x.tipo === 'cobro').sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+  ponerEnlace('#enviar-pagos', cobros.length ? enlaceWhatsApp(p, [
+    `Pagos de: ${p.obra}`,
+    cliente,
+    'Cobros recibidos:',
+    ...cobros.map(c => `- ${c.fecha}: ${dinero(c.monto)}`),
+    `Total cobrado: ${dinero(cobrado)}`,
+    saldo >= 0 ? `Falta por cobrar: ${dinero(saldo)}` : `Saldo a favor del cliente: ${dinero(-saldo)}`
+  ]) : null);
+
+  document.querySelector('#enviar').showModal();
+});
+
+document.querySelector('#enviar-cancelar').addEventListener('click', () => document.querySelector('#enviar').close());
+document.querySelector('.opciones').addEventListener('click', e => {
+  const opcion = e.target.closest('a');
+  if (!opcion) return;
+  if (opcion.getAttribute('aria-disabled') === 'true') { e.preventDefault(); return; }
+  setTimeout(() => document.querySelector('#enviar').close(), 0);   // se abre WhatsApp y la ventana se cierra
+});
 
 // ===== DUPLICAR =====
 document.querySelector('#btn-duplicar').addEventListener('click', () => {
@@ -519,30 +567,49 @@ document.querySelector('#btn-restaurar').addEventListener('click', () => {
 
 // ===== SERVIDOR (Node): guardar y cargar =====
 // Cada vez que algo cambia se manda TODO al servidor. Al abrir la página se pide todo de vuelta.
+let cargado = false;   // NUEVO: no se guarda nada hasta haber cargado bien lo que ya había en el servidor
+
+function avisoServidor(texto) {                  // NUEVO: el aviso rojo solo se ve cuando algo falla
+  const cartel = document.querySelector('#aviso-servidor');
+  cartel.hidden = texto === '';
+  cartel.textContent = texto;
+}
+
 async function guardarEnServidor() {
+  if (!cargado) {
+    avisoServidor('No se pudo cargar lo guardado en el servidor, así que NO se están guardando los cambios. Revisa que el servidor esté prendido y recarga la página (Ctrl + F5). Mientras tanto usa el Respaldo.');
+    return;
+  }
   try {
-    await fetch('/api/datos', {
+    const respuesta = await fetch('/api/datos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proyectos, rubros, materiales, pagos })
     });
+    if (!respuesta.ok) throw new Error('El servidor respondió ' + respuesta.status);   // CAMBIO: antes un error 404 pasaba sin avisar
+    avisoServidor('');
   } catch (e) {
     console.error('No se pudo guardar en el servidor', e);
+    avisoServidor('No se pudo guardar en el servidor. Tus datos solo están en esta página: usa el Respaldo para no perderlos.');
   }
 }
 
 async function cargarDelServidor() {
   try {
-    const respuesta = await fetch('/api/datos');
+    const respuesta = await fetch('/api/datos', { cache: 'no-store' });
+    if (!respuesta.ok) throw new Error('El servidor respondió ' + respuesta.status);
     const d = await respuesta.json();
     for (const [lista, nueva] of [[proyectos, d.proyectos], [rubros, d.rubros], [materiales, d.materiales], [pagos, d.pagos]]) {
       lista.length = 0;
       lista.push(...(nueva || []));
       for (const x of lista) ultimoId = Math.max(ultimoId, x.id);   // que los id nuevos no choquen con los que vienen del servidor
     }
+    cargado = true;
+    avisoServidor('');
     dibujarLista();
   } catch (e) {
     console.error('No se pudo cargar del servidor', e);
+    avisoServidor('No se pudo cargar lo guardado en el servidor. Revisa que el servidor esté prendido (node server.js) y que abras la página en http://localhost:3000. Los cambios NO se guardarán hasta que cargue bien.');
   }
 }
 
