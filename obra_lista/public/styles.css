@@ -70,3 +70,24 @@ dialog p{margin:0 0 12px}
 /* ===== Ventana de WhatsApp: tres opciones ===== */
 .opciones .b{display:block;text-align:center;margin:8px 0}
 .b[aria-disabled="true"]{opacity:.45;pointer-events:none}
+
+/* ===== Impresión nativa limpia a PDF ===== */
+@media print {
+  @page { margin: 12mm; size: A4 portrait; }
+  body { background: #ffffff !important; margin: 0; padding: 0; }
+  main, dialog { display: none !important; }
+  #plantilla-pdf {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+  }
+  .pdf-hoja {
+    width: 100% !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

@@ -1,7 +1,8 @@
 const proyectos = [];
 const rubros = [];
 const materiales = [];   // NUEVO: materiales de todos los presupuestos
-const pagos = [];        // NUEVO: cobros y pagos de todos los presupuestos
+const pagos = []; 
+let empresa = {nombre: '', ruc: '', telefono: '', ciudad: '', logo: ''};   // NUEVO: datos de la empresa
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let ultimoId = 0;
 const nuevoId = () => { ultimoId = Math.max(Date.now(), ultimoId + 1); return ultimoId; };   // NUEVO: id que nunca se repite
@@ -427,14 +428,16 @@ document.querySelector('#btn-eliminar').addEventListener('click', () => {
 // ===== WHATSAPP: tres envíos separados =====
 // Regla: el presupuesto, la lista de materiales y los cobros NUNCA van mezclados.
 // Y lo que le pagaste a tus trabajadores no se envía jamás: ni siquiera existe aquí.
+// ===== WHATSAPP Y PDF: envíos separados =====
 function enlaceWhatsApp(p, lineas) {
-  let numero = (p.telefono || '').replace(/\D/g, '');            // deja solo los números
-  if (numero.startsWith('0')) numero = '593' + numero.slice(1);   // 0990000000 -> 593990000000 (Ecuador)
+  let numero = (p.telefono || '').replace(/\D/g, '');
+  if (numero.startsWith('0')) numero = '593' + numero.slice(1);
   return `https://wa.me/${numero}?text=${encodeURIComponent(lineas.join('\n'))}`;
 }
 
-function ponerEnlace(id, url) {                  // si no hay nada que enviar, el botón queda apagado
+function ponerEnlace(id, url) {
   const a = document.querySelector(id);
+  if (!a) return;
   if (url) {
     a.href = url;
     a.removeAttribute('aria-disabled');
@@ -451,7 +454,6 @@ document.querySelector('#btn-whatsapp').addEventListener('click', () => {
   const saldo = total - cobrado;
   const cliente = `Cliente: ${p.cliente}`;
 
-  // 1) SOLO el presupuesto: rubros y total. Nada de cobros.
   const rub = rubros.filter(r => r.p === p.id);
   ponerEnlace('#enviar-presupuesto', rub.length ? enlaceWhatsApp(p, [
     `Presupuesto: ${p.obra}`,
@@ -460,7 +462,6 @@ document.querySelector('#btn-whatsapp').addEventListener('click', () => {
     `Total: ${dinero(total)}`
   ]) : null);
 
-  // 2) SOLO la lista de materiales.
   const mats = materiales.filter(m => m.p === p.id);
   ponerEnlace('#enviar-materiales', mats.length ? enlaceWhatsApp(p, [
     `Lista de materiales: ${p.obra}`,
@@ -468,7 +469,6 @@ document.querySelector('#btn-whatsapp').addEventListener('click', () => {
     ...mats.map(m => `- ${m.nombre}: ${m.cantidad} ${m.unidad}`.trim())
   ]) : null);
 
-  // 3) SOLO los cobros entre el cliente y el contratista (nunca los pagos a trabajadores).
   const cobros = pagos.filter(x => x.p === p.id && x.tipo === 'cobro').sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   ponerEnlace('#enviar-pagos', cobros.length ? enlaceWhatsApp(p, [
     `Pagos de: ${p.obra}`,
@@ -483,12 +483,75 @@ document.querySelector('#btn-whatsapp').addEventListener('click', () => {
 });
 
 document.querySelector('#enviar-cancelar').addEventListener('click', () => document.querySelector('#enviar').close());
-document.querySelector('.opciones').addEventListener('click', e => {
+
+// Cierra el modal si tocan cualquiera de los enlaces de texto rápido
+document.querySelector('#enviar').addEventListener('click', e => {
   const opcion = e.target.closest('a');
   if (!opcion) return;
   if (opcion.getAttribute('aria-disabled') === 'true') { e.preventDefault(); return; }
-  setTimeout(() => document.querySelector('#enviar').close(), 0);   // se abre WhatsApp y la ventana se cierra
+  setTimeout(() => document.querySelector('#enviar').close(), 0);
 });
+
+// ===== CONEXIÓN CON EL SERVIDOR PARA DESCARGAR PDF =====
+async function generarPDF(tipo) {
+  const p = proyectos.find(x => x.id === actualId);
+  if (!p) return;
+
+  let items = [];
+  let totales = {};
+  let nombreArchivo = `${tipo}_${p.obra}.pdf`.replace(/\s+/g, '_');
+
+  if (tipo === 'presupuesto') {
+    items = rubros.filter(r => r.p === p.id);
+    if (!items.length) return alert('Agrega al menos un rubro antes de generar el PDF.');
+    totales = { total: totalDe(p.id) };
+  } else if (tipo === 'materiales') {
+    items = materiales.filter(m => m.p === p.id);
+    if (!items.length) return alert('Agrega al menos un material antes de generar el PDF.');
+  } else if (tipo === 'pagos') {
+    items = pagos.filter(x => x.p === p.id && x.tipo === 'cobro').sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    if (!items.length) return alert('No hay cobros registrados para este cliente.');
+    const total = totalDe(p.id);
+    const cobrado = cobradoDe(p.id);
+    totales = { total, cobrado, saldo: total - cobrado };
+  }
+
+  document.querySelector('#enviar').close();
+
+  try {
+    const resp = await fetch('/api/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, proyecto: p, items, empresa, totales })
+    });
+    if (!resp.ok) throw new Error('Error generando PDF en el servidor');
+
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    let numero = (p.telefono || '').replace(/\D/g, '');
+    if (numero.startsWith('0')) numero = '593' + numero.slice(1);
+    if (numero) {
+      const msg = `Hola ${p.cliente}, le envío adjunto el documento PDF correspondiente a la obra *${p.obra}*.`;
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('No se pudo descargar el PDF. Revisa que el servidor esté corriendo.');
+  }
+}
+
+document.querySelector('#pdf-presupuesto').addEventListener('click', () => generarPDF('presupuesto'));
+document.querySelector('#pdf-materiales').addEventListener('click', () => generarPDF('materiales'));
+document.querySelector('#pdf-pagos').addEventListener('click', () => generarPDF('pagos'));
+
 
 // ===== DUPLICAR =====
 document.querySelector('#btn-duplicar').addEventListener('click', () => {
@@ -584,7 +647,8 @@ async function guardarEnServidor() {
     const respuesta = await fetch('/api/datos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ proyectos, rubros, materiales, pagos })
+      body: JSON.stringify({ proyectos, rubros, materiales, pagos, empresa })
+
     });
     if (!respuesta.ok) throw new Error('El servidor respondió ' + respuesta.status);   // CAMBIO: antes un error 404 pasaba sin avisar
     avisoServidor('');
@@ -605,6 +669,9 @@ async function cargarDelServidor() {
       for (const x of lista) ultimoId = Math.max(ultimoId, x.id);   // que los id nuevos no choquen con los que vienen del servidor
     }
     cargado = true;
+
+    if (d.empresa) empresa = { ...empresa, ...d.empresa };
+
     avisoServidor('');
     dibujarLista();
   } catch (e) {
@@ -616,3 +683,145 @@ async function cargarDelServidor() {
 if (location.hash !== '' && location.hash !== '#inicio') location.replace('#inicio');   // al recargar, siempre empieza en el inicio
 cargarDelServidor();
 dibujarLista();
+
+// ===== PERFIL DE CONSTRUCTORA Y VISTA PREVIA DEL LOGO =====
+function mostrarPreviewLogo(base64) {
+  const box = document.querySelector('#preview-logo-box');
+  const img = document.querySelector('#preview-logo');
+  if (base64) {
+    img.src = base64;
+    box.hidden = false;
+    box.style.display = 'flex';
+  } else {
+    img.src = '';
+    box.hidden = true;
+    box.style.display = 'none';
+  }
+}
+
+document.querySelector('#btn-empresa').addEventListener('click', () => {
+  document.querySelector('#emp-nombre').value = empresa.nombre || '';
+  document.querySelector('#emp-ruc').value = empresa.ruc || '';
+  document.querySelector('#emp-telefono').value = empresa.telefono || '';
+  document.querySelector('#emp-ciudad').value = empresa.ciudad || '';
+  document.querySelector('#logo-input').value = '';
+  document.querySelector('#msg-empresa').textContent = '';
+  mostrarPreviewLogo(empresa.logo);
+});
+
+// Comprime la imagen a max 350px de ancho y muestra miniatura al instante
+document.querySelector('#logo-input').addEventListener('change', e => {
+  const file = e.target.files.item(0);
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxAncho = 350;
+      const escala = img.width > maxAncho ? maxAncho / img.width : 1;
+      canvas.width = img.width * escala;
+      canvas.height = img.height * escala;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const comprimido = canvas.toDataURL('image/png');
+      empresa.logo = comprimido;
+      mostrarPreviewLogo(comprimido);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.querySelector('#btn-quitar-logo').addEventListener('click', () => {
+  empresa.logo = '';
+  document.querySelector('#logo-input').value = '';
+  mostrarPreviewLogo('');
+});
+
+document.querySelector('#btn-guardar-empresa').addEventListener('click', () => {
+  empresa.nombre = document.querySelector('#emp-nombre').value.trim();
+  empresa.ruc = document.querySelector('#emp-ruc').value.trim();
+  empresa.telefono = document.querySelector('#emp-telefono').value.trim();
+  empresa.ciudad = document.querySelector('#emp-ciudad').value.trim();
+  guardarEnServidor();
+  document.querySelector('#msg-empresa').textContent = '¡Datos de la constructora guardados!';
+  setTimeout(() => { location.hash = '#inicio'; }, 700);
+});
+
+// ===== GENERACIÓN DE PDF Y ENVÍO DIRECTO POR WHATSAPP =====
+async function generarPDF(tipo) {
+  const p = proyectos.find(x => x.id === actualId);
+  if (!p) return;
+
+  let items = [];
+  let totales = {};
+  let nombreArchivo = `${tipo}_${p.obra}.pdf`.replace(/\s+/g, '_');
+
+  if (tipo === 'presupuesto') {
+    items = rubros.filter(r => r.p === p.id);
+    if (!items.length) return alert('Agrega al menos un rubro antes de generar el PDF.');
+    totales = { total: totalDe(p.id) };
+  } else if (tipo === 'materiales') {
+    items = materiales.filter(m => m.p === p.id);
+    if (!items.length) return alert('Agrega al menos un material antes de generar el PDF.');
+  } else if (tipo === 'pagos') {
+    items = pagos.filter(x => x.p === p.id && x.tipo === 'cobro').sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    if (!items.length) return alert('No hay cobros registrados para este cliente.');
+    const total = totalDe(p.id);
+    const cobrado = cobradoDe(p.id);
+    totales = { total, cobrado, saldo: total - cobrado };
+  }
+
+  document.querySelector('#enviar').close();
+
+  try {
+    const resp = await fetch('/api/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, proyecto: p, items, empresa, totales })
+    });
+    if (!resp.ok) throw new Error('Error generando PDF en el servidor');
+
+        const blob = await resp.blob();
+    const archivoPdf = new File([blob], nombreArchivo, { type: 'application/pdf' });
+    const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // 1. Solo en celular: abre el menú nativo para compartir directo a WhatsApp con el PDF adjunto
+    if (esCelular && navigator.canShare && navigator.canShare({ files: [archivoPdf] })) {
+      await navigator.share({
+        files: [archivoPdf],
+        title: nombreArchivo,
+        text: `Hola ${p.cliente}, le envío adjunto el documento PDF de la obra ${p.obra}.`
+      });
+      return;
+    }
+
+    // 2. En computadora: descarga el PDF y abre DIRECTO el chat con el número del cliente
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    let numero = (p.telefono || '').replace(/\D/g, '');
+    if (numero.startsWith('0')) numero = '593' + numero.slice(1);
+    const msg = `Hola ${p.cliente}, le envío adjunto el documento PDF correspondiente a la obra *${p.obra}*.`;
+
+    setTimeout(() => {
+      if (numero) {
+        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
+      } else {
+        alert('El PDF se descargó, pero este cliente no tiene teléfono registrado para abrir WhatsApp.');
+      }
+    }, 1500);
+
+
+  } catch (err) {
+    console.error(err);
+    alert('No se pudo descargar el PDF. Revisa la terminal del servidor.');
+  }
+}

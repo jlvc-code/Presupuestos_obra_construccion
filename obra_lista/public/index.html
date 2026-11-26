@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ObraLista</title>
 <link rel="stylesheet" href="styles.css">
+<script src="https://cloudflare.com"></script>
+
 </head>
 <body>
 <main>
@@ -23,6 +25,9 @@
   <p id="vacio" class="mut" hidden>Aún no hay presupuestos. Crea el primero.</p>
 
   <a id="btn-respaldo" class="b" href="#respaldo">Respaldo de datos</a>
+
+  <a id="btn-empresa" class="b" href="#empresa">🏢 Datos de mi Constructora</a>
+
 </section>
 
 
@@ -31,6 +36,7 @@
   <h1 id="form-titulo">Nuevo presupuesto</h1>
 
   <form id="form-presupuesto">
+
     <label for="cliente">Cliente</label>
     <input id="cliente" list="lista-clientes">
     <datalist id="lista-clientes"></datalist>
@@ -152,6 +158,48 @@
   <p id="msg-respaldo" class="mut"></p>
 </section>
 
+
+<!-- ============ PANTALLA 5: MI CONSTRUCTORA ============ -->
+<section id="empresa" class="pantalla">
+  <a class="b" href="#inicio">← Volver</a>
+  <h1>Mi Constructora</h1>
+  <p class="mut">Estos datos y tu logo aparecerán automáticamente en todos tus presupuestos en PDF.</p>
+
+  <form id="form-empresa">
+    <label for="emp-nombre">Nombre de la constructora o contratista</label>
+    <input id="emp-nombre" placeholder="Ej. Constructora Pérez & Asociados">
+
+    <label for="emp-ruc">RUC / Cédula</label>
+    <input id="emp-ruc" placeholder="Ej. 1200000000001">
+
+    <label for="emp-telefono">Teléfono de contacto</label>
+    <input id="emp-telefono" type="tel" placeholder="Ej. 099 000 0000">
+
+    <label for="emp-ciudad">Ciudad / Dirección</label>
+    <input id="emp-ciudad" placeholder="Ej. Quevedo, Ecuador">
+
+    <label for="logo-input">Logo de la constructora</label>
+    <input id="logo-input" type="file" accept="image/png, image/jpeg, image/webp">
+
+    <!-- Recuadro de vista previa (oculta hasta elegir imagen) -->
+    <div id="preview-logo-box" hidden style="align-items: center; gap: 12px; margin: 8px 0 14px; padding: 10px; border: 1px dashed var(--bd); border-radius: 8px; background: var(--card);">
+      <img id="preview-logo" alt="Vista previa del logo" style="max-height: 65px; max-width: 140px; object-fit: contain; background: #fff; padding: 4px; border-radius: 4px;">
+      <button id="btn-quitar-logo" type="button" class="b bad" style="padding: 6px 10px; font-size: 0.85rem;">Quitar logo</button>
+    </div>
+
+    <label for = "firma-input">Firma de la constructora</label>
+    <input id="firma-input" type="file" accept="image/png, image/jpeg, image/webp">
+    
+    <div id="preview-firma-box" hidden style="align-items: center; gap: 12px; margin: 8px 0 14px; padding: 10px; border: 1px dashed var(--bd); border-radius: 8px; background: var(--card);">
+      <img id="preview-firma" alt="Vista previa de la firma" style="max-height: 65px; max-width: 140px; object-fit: contain; background: #fff; padding: 4px; border-radius: 4px;">
+      <button id="btn-quitar-firma" type="button" class="b bad" style="padding: 6px 10px; font-size: 0.85rem;">Quitar firma</button>
+    </div>
+
+    <p id="msg-empresa" class="mut"></p>
+    <button id="btn-guardar-empresa" class="b p" type="button">Guardar datos de empresa</button>
+  </form>
+</section>
+
 </main>
 
 <!-- Aviso flotante para confirmar antes de borrar -->
@@ -161,18 +209,73 @@
   <button id="confirmar-si" class="b p" type="button">Sí, borrar</button>
 </dialog>
 
-<!-- Ventana para elegir qué enviar por WhatsApp -->
+
+<!-- Ventana para elegir qué enviar -->
 <dialog id="enviar">
-  <p><b>¿Qué quieres enviar por WhatsApp?</b></p>
+  <p><b>Generar PDF profesional (con logo)</b></p>
   <div class="opciones">
-    <a id="enviar-presupuesto" class="b" href="#" target="_blank" rel="noopener">Enviar presupuesto</a>
-    <a id="enviar-materiales" class="b" href="#" target="_blank" rel="noopener">Enviar lista de materiales</a>
-    <a id="enviar-pagos" class="b" href="#" target="_blank" rel="noopener">Enviar montos de pagos</a>
+    <button id="pdf-presupuesto" class="b p" type="button">📄 PDF Presupuesto</button>
+    <button id="pdf-materiales" class="b p" type="button">🧱 PDF Lista de Materiales</button>
+    <button id="pdf-pagos" class="b p" type="button">💰 PDF Estado de Pagos</button>
   </div>
-  <p class="mut"><small>Los pagos a trabajadores nunca se envían al cliente.</small></p>
+  <hr>
+  <p class="mut"><small>O enviar como texto rápido por WhatsApp:</small></p>
+  <div class="opciones">
+    <a id="enviar-presupuesto" class="b" href="#" target="_blank" rel="noopener">Texto Presupuesto</a>
+    <a id="enviar-materiales" class="b" href="#" target="_blank" rel="noopener">Texto Materiales</a>
+    <a id="enviar-pagos" class="b" href="#" target="_blank" rel="noopener">Texto Pagos</a>
+  </div>
+  <p class="mut"><small>Los pagos a trabajadores nunca se incluyen.</small></p>
   <button id="enviar-cancelar" class="b" type="button">Cancelar</button>
 </dialog>
 
+<!-- PLANTILLA OCULTA PARA EL PDF -->
+<div id="plantilla-pdf" style="display: none;">
+  <div class="pdf-hoja">
+    <header class="pdf-header">
+      <div class="pdf-empresa">
+        <img id="pdf-logo-img" alt="Logo" class="pdf-logo" style="display: none;">
+        <div>
+          <h2 class="pdf-nombre-empresa" id="pdf-emp-nombre">PRESUPUESTO DE OBRA</h2>
+          <p id="pdf-emp-ruc"></p>
+          <p id="pdf-emp-contacto"></p>
+        </div>
+      </div>
+      <div class="pdf-doc-info">
+        <span class="pdf-badge" id="pdf-tipo-doc">PROFORMA / PRESUPUESTO</span>
+        <p><b>Fecha:</b> <span id="pdf-fecha-emision"></span></p>
+        <p><b>N.º Doc:</b> <span id="pdf-numero"></span></p>
+      </div>
+    </header>
+
+    <section class="pdf-cliente-box">
+      <div>
+        <p><b>Cliente:</b> <span id="pdf-cliente"></span></p>
+        <p><b>Teléfono:</b> <span id="pdf-telefono"></span></p>
+      </div>
+      <div>
+        <p><b>Obra:</b> <span id="pdf-obra"></span></p>
+        <p><b>Ubicación:</b> <span id="pdf-ubicacion"></span></p>
+      </div>
+    </section>
+
+    <table class="pdf-tabla">
+      <thead id="pdf-tabla-head"></thead>
+      <tbody id="pdf-tabla-body"></tbody>
+    </table>
+
+    <div class="pdf-totales" id="pdf-totales-box"></div>
+
+    <footer class="pdf-footer">
+      <p><b>Nota:</b> Documento generado digitalmente. Validez de la oferta: 15 días calendario.</p>
+      <div class="pdf-firmas">
+        <div>__________________________<br>Firma Autorizada</div>
+        <div>__________________________<br>Aceptación del Cliente</div>
+      </div>
+    </footer>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="jscript.js"></script>
 </body>
 </html>
