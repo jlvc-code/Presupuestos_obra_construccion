@@ -56,14 +56,14 @@ app.post('/api/pdf', (req, res) => {
       materiales: 'LISTA DE MATERIALES',
       pagos: 'ESTADO DE CUENTA'
     };
-    doc.rect(395, 42, 155, 22).fill('#15752c');
+    doc.rect(395, 42, 155, 22).fill('#c2410c');
     doc.fillColor('#ffffff').fontSize(9).font('Helvetica-Bold')
        .text(titulos[tipo] || 'DOCUMENTO', 395, 49, { width: 155, align: 'center' });
     doc.fillColor('#374151').fontSize(9).font('Helvetica')
        .text(`Fecha: ${new Date().toISOString().slice(0, 10)}`, 395, 70, { width: 155, align: 'right' })
        .text(`Obra N.º: ${String(proyecto.id).slice(-6)}`, 395, 83, { width: 155, align: 'right' });
 
-    doc.moveTo(45, 110).lineTo(550, 110).lineWidth(2).stroke('#15752c');
+    doc.moveTo(45, 110).lineTo(550, 110).lineWidth(2).stroke('#c2410c');
 
     // 3. Caja de datos del cliente y la obra
     doc.rect(45, 122, 505, 52).fill('#f8fafc');
@@ -124,14 +124,14 @@ app.post('/api/pdf', (req, res) => {
     y += 15;
     if (tipo === 'presupuesto') {
       doc.rect(340, y, 210, 28).fill('#f0fdf4').stroke('#bbf7d0');
-      doc.fillColor('#14532d').fontSize(11).font('Helvetica-Bold')
+      doc.fillColor('#c2410c').fontSize(11).font('Helvetica-Bold')
          .text('TOTAL:', 352, y + 9)
          .text(`$${Number(totales?.total || 0).toFixed(2)}`, 420, y + 9, { width: 120, align: 'right' });
       y += 45;
     } else if (tipo === 'pagos') {
       const filas = [
         { label: 'Total Presupuesto:', val: totales?.total || 0, bg: '#f8fafc', fg: '#1e293b' },
-        { label: 'Total Cobrado:', val: totales?.cobrado || 0, bg: '#f0fdf4', fg: '#14532d' },
+        { label: 'Total Cobrado:', val: totales?.cobrado || 0, bg: '#f0fdf4', fg: '#c2410c' },
         { label: 'Saldo Pendiente:', val: Math.max(0, totales?.saldo || 0), bg: '#fef2f2', fg: '#991b1b' }
       ];
       for (const f of filas) {

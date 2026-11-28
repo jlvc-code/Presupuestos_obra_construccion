@@ -1,75 +1,205 @@
-/* ===== Colores y modo oscuro (igual que tu diseño) ===== */
-:root{color-scheme:light dark;--bg:#f6f7f5;--fg:#1d2420;--card:#fff;--mut:#66706a;--pri:#15752c;--on:#fff;--bd:#d9dfda;--bad:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121613;--fg:#e8ece9;--card:#1b211d;--mut:#9aa59e;--pri:#5fc37a;--on:#10200f;--bd:#2e3731;--bad:#f2b8b5}}
-:root[data-theme="dark"]{--bg:#121613;--fg:#e8ece9;--card:#1b211d;--mut:#9aa59e;--pri:#5fc37a;--on:#10200f;--bd:#2e3731;--bad:#f2b8b5}
+/* ===== Colores: Azul Acero & Terracota Construcción ===== */
+:root {
+  color-scheme: light dark;
+  --bg: #f4f5f7;          /* Gris concreto muy limpio */
+  --fg: #182230;          /* Azul acero casi negro para lectura nítida */
+  --card: #ffffff;        /* Tarjetas blanco puro */
+  --mut: #5c6878;         /* Gris pizarra secundario */
+  --pri: #c2410c;         /* Terracota / ladrillo intenso (acción principal) */
+  --pri-hover: #9a3412;   /* Terracota oscuro al pasar el mouse */
+  --sec: #1e293b;         /* Azul pizarra oscuro (detalles y acentos) */
+  --on: #ffffff;
+  --bd: #d5dbe3;          /* Borde definido */
+  --bad: #dc2626;         /* Rojo alerta */
+  --shadow: 0 2px 6px rgba(24, 34, 48, 0.06);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161d;
+    --fg: #eef2f6;
+    --card: #1a222d;
+    --mut: #94a3b8;
+    --pri: #ea580c;
+    --pri-hover: #f97316;
+    --sec: #334155;
+    --on: #ffffff;
+    --bd: #2b3646;
+    --bad: #f87171;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #11161d;
+  --fg: #eef2f6;
+  --card: #1a222d;
+  --mut: #94a3b8;
+  --pri: #ea580c;
+  --pri-hover: #f97316;
+  --sec: #334155;
+  --on: #ffffff;
+  --bd: #2b3646;
+  --bad: #f87171;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
 
 /* ===== Base ===== */
-html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,Arial,sans-serif}
-main{max-width:640px;margin:auto;padding:12px}
-h1{font-size:1.4rem;margin:.6rem 0}
-small{font-size:.8rem}
-hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15.5px/1.45 system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main { max-width: 660px; margin: auto; padding: 16px; }
+h1 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--sec);
+  margin: 0.5rem 0 1rem;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bd);
+}
+small { font-size: 0.82rem; }
+hr { border: 0; border-top: 1px solid var(--bd); margin: 16px 0; }
 
 /* ===== Formularios ===== */
-input,select,textarea{width:100%;box-sizing:border-box;padding:12px;margin:4px 0 8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
-label{font-size:.85rem;color:var(--mut)}
+input, select, textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  margin: 4px 0 10px;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--pri);
+  box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.16);
+}
+label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg);
+}
 
 /* ===== Botones (sirven para <button> y para <a>) ===== */
-.b{display:inline-block;padding:11px 14px;margin:4px 4px 4px 0;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;text-decoration:none;cursor:pointer}
-.b.p{background:var(--pri);color:var(--on);border-color:var(--pri)}
+.b {
+  display: inline-block;
+  padding: 11px 16px;
+  margin: 4px 4px 4px 0;
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: transform 0.1s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.b:hover {
+  border-color: var(--mut);
+  box-shadow: 0 3px 8px rgba(24, 34, 48, 0.08);
+}
+.b:active { transform: scale(0.98); }
+
+.b.p {
+  background: var(--pri);
+  color: var(--on);
+  border-color: var(--pri);
+}
+.b.p:hover {
+  background: var(--pri-hover);
+  border-color: var(--pri-hover);
+}
 
 /* ===== Tarjetas y filas ===== */
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin:8px 0}
-a.card{display:block;color:inherit;text-decoration:none}
-.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-left: 4px solid var(--pri);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+a.card { display: block; color: inherit; text-decoration: none; }
+a.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(24, 34, 48, 0.1);
+}
+.row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 
 /* ===== Colores de texto (van después de .b para que el rojo gane) ===== */
-.mut{color:var(--mut)}
-.bad{color:var(--bad)}
-.x{border:0;background:none;color:var(--bad);font-size:1rem;padding:6px;cursor:pointer}
-.ed{border:0;background:none;color:var(--pri);font-size:1rem;padding:6px;cursor:pointer}
+.mut { color: var(--mut); }
+.bad { color: var(--bad); }
+.x { border: 0; background: none; color: var(--bad); font-size: 1rem; padding: 6px; cursor: pointer; }
+.ed { border: 0; background: none; color: var(--sec); font-size: 1rem; padding: 6px; cursor: pointer; }
 
-/* ===== Pantallas: solo se ve una a la vez =====
-   Cada pantalla es una <section class="pantalla">.
-   Todas están escondidas, menos la que el enlace (#nuevo, #detalle...) está señalando.
-   Si no hay ninguna señalada, se ve el inicio. */
-.pantalla{display:none}
-.pantalla:target{display:block}
-#inicio{display:block}
-main:has(.pantalla:target) #inicio:not(:target){display:none}
+/* ===== Pantallas: solo se ve una a la vez ===== */
+.pantalla { display: none; }
+.pantalla:target { display: block; }
+#inicio { display: block; }
+main:has(.pantalla:target) #inicio:not(:target) { display: none; }
 
 /* ===== Pestañas del detalle ===== */
-.tabs{margin:8px 0}
-[hidden]{display:none !important}
+.tabs { margin: 12px 0; }
+[hidden] { display: none !important; }
 
-/* ===== Accesibilidad: se ve dónde está el teclado ===== */
-:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+/* ===== Accesibilidad ===== */
+:focus-visible { outline: 2px solid var(--pri); outline-offset: 2px; }
 
 /* ===== Aviso flotante (confirmar antes de borrar) ===== */
-dialog{width:calc(100% - 32px);max-width:320px;padding:16px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--fg)}
-dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog p{margin:0 0 12px}
+dialog {
+  width: calc(100% - 32px);
+  max-width: 340px;
+  padding: 18px;
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+dialog::backdrop { background: rgba(15, 23, 42, 0.55); }
+dialog p { margin: 0 0 12px; }
 
 /* ===== Pagos en dos columnas ===== */
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.col-titulo{font-size:.9rem;margin:.4rem 0 .2rem}
-.card.mini{display:block;padding:8px 10px}
-.card.mini b{display:block}
-.card.mini .acc{margin-top:2px}
-.col-total{padding:8px 4px;border-top:1px solid var(--bd);margin-top:6px}
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.col-titulo { font-size: 0.92rem; font-weight: 700; color: var(--sec); margin: 0.4rem 0 0.3rem; }
+.card.mini { display: block; padding: 9px 11px; border-left-width: 3px; }
+.card.mini b { display: block; }
+.card.mini .acc { margin-top: 2px; }
+.col-total { padding: 8px 4px; border-top: 1px solid var(--bd); margin-top: 6px; }
 
-/* ===== Avisos del detalle (no bloquean, solo avisan) ===== */
-.aviso{padding:10px 12px;margin:8px 0;border:1px solid;border-radius:10px}
-.aviso-amarillo{background:#fff4cc;border-color:#e0b000;color:#5c4400}
-.aviso-rojo{background:#fde7e5;border-color:var(--bad);color:#7a1a14}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .aviso-amarillo{background:#3a3000;border-color:#b38f00;color:#ffe9a0}:root:not([data-theme="light"]) .aviso-rojo{background:#3a1512;color:#f2b8b5}}
-:root[data-theme="dark"] .aviso-amarillo{background:#3a3000;border-color:#b38f00;color:#ffe9a0}
-:root[data-theme="dark"] .aviso-rojo{background:#3a1512;color:#f2b8b5}
+/* ===== Avisos del detalle ===== */
+.aviso { padding: 11px 14px; margin: 10px 0; border: 1px solid; border-radius: 10px; font-weight: 500; }
+.aviso-amarillo { background: #fef3c7; border-color: #d97706; color: #78350f; }
+.aviso-rojo { background: #fee2e2; border-color: var(--bad); color: #7f1d1d; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aviso-amarillo { background: #3b2606; border-color: #b45309; color: #fde68a; }
+  :root:not([data-theme="light"]) .aviso-rojo { background: #3b1212; color: #fecaca; }
+}
+:root[data-theme="dark"] .aviso-amarillo { background: #3b2606; border-color: #b45309; color: #fde68a; }
+:root[data-theme="dark"] .aviso-rojo { background: #3b1212; color: #fecaca; }
 
 /* ===== Ventana de WhatsApp: tres opciones ===== */
-.opciones .b{display:block;text-align:center;margin:8px 0}
-.b[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.opciones .b { display: block; text-align: center; margin: 8px 0; }
+.b[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
 
 /* ===== Impresión nativa limpia a PDF ===== */
 @media print {
